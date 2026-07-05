@@ -7,7 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import and_, delete, func, select
 from sqlalchemy.orm import Session
 
 from app.db import Concept, Edge
@@ -163,3 +163,75 @@ class SqlEdgeRepository:
     def backlinks(self, target_id: str) -> list[Edge]:
         stmt = select(Edge).where(Edge.target_id == target_id).order_by(Edge.source_id)
         return list(self.s.execute(stmt).scalars())
+
+
+@dataclass
+class SearchHit:
+    id: str
+    type: str
+    title: str | None
+    description: str | None
+    score: float
+    snippet: str | None
+
+
+_HEADLINE_OPTS = "StartSel=<mark>, StopSel=</mark>, MaxWords=25, MinWords=8, ShortWord=3"
+
+
+class SqlSearchRepository:
+    """Full-text search over the generated `search_vector` column (ts_rank_cd ranking)."""
+
+    def __init__(self, session: Session) -> None:
+        self.s = session
+
+    def search(
+        self,
+        q: str,
+        *,
+        type: str | None = None,
+        tags: list[str] | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> tuple[list[SearchHit], int]:
+        tsquery = func.websearch_to_tsquery("english", q)
+        score = func.ts_rank_cd(Concept.search_vector, tsquery)
+        snippet = func.ts_headline("english", Concept.body, tsquery, _HEADLINE_OPTS)
+
+        conditions = [Concept.search_vector.bool_op("@@")(tsquery)]
+        if type:
+            conditions.append(Concept.type == type)
+        if tags:
+            conditions.append(Concept.tags.contains(tags))
+        where = and_(*conditions)
+
+        total = self.s.execute(
+            select(func.count()).select_from(Concept).where(where)
+        ).scalar_one()
+
+        rows = self.s.execute(
+            select(
+                Concept.id,
+                Concept.type,
+                Concept.title,
+                Concept.description,
+                score.label("score"),
+                snippet.label("snippet"),
+            )
+            .where(where)
+            .order_by(score.desc(), Concept.id)
+            .limit(limit)
+            .offset(offset)
+        ).all()
+
+        hits = [
+            SearchHit(
+                id=r.id,
+                type=r.type,
+                title=r.title,
+                description=r.description,
+                score=float(r.score),
+                snippet=r.snippet,
+            )
+            for r in rows
+        ]
+        return hits, total
