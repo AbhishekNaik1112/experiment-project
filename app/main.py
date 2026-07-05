@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from app.errors import ConflictError, NotFoundError
-from app.routers import concepts, search
+from app.routers import concepts, ingest, search
 
 
 def create_app() -> FastAPI:
@@ -26,6 +26,7 @@ def create_app() -> FastAPI:
 
     app.include_router(concepts.router)
     app.include_router(search.router)
+    app.include_router(ingest.router)
 
     return app
 

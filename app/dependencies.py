@@ -9,6 +9,7 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from app.db import get_session
+from app.ingest import IngestService
 from app.repository import SqlConceptRepository, SqlEdgeRepository, SqlSearchRepository
 from app.services import ConceptService
 
@@ -31,3 +32,11 @@ def get_concept_service(
     edges: SqlEdgeRepository = Depends(get_edge_repo),
 ) -> ConceptService:
     return ConceptService(concepts, edges, session)
+
+
+def get_ingest_service(
+    session: Session = Depends(get_session),
+    concepts: SqlConceptRepository = Depends(get_concept_repo),
+    edges: SqlEdgeRepository = Depends(get_edge_repo),
+) -> IngestService:
+    return IngestService(concepts, edges, session)
