@@ -75,3 +75,13 @@ def resolve_target(source_id: str, href: str) -> str | None:
     if target in ("", "."):
         return None
     return target
+
+
+def resolved_links(source_id: str, body: str) -> list[tuple[str, str]]:
+    """Bundle-local links from a body as (target_concept_id, anchor_text), external ones dropped."""
+    out: list[tuple[str, str]] = []
+    for raw in extract_links(body):
+        target = resolve_target(source_id, raw.href)
+        if target is not None:
+            out.append((target, raw.anchor_text))
+    return out

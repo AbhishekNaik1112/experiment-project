@@ -56,7 +56,7 @@ def derive_id(rel_path: str) -> str:
     return p
 
 
-def _normalize_tags(raw: Any) -> list[str]:
+def normalize_tags(raw: Any) -> list[str]:
     if raw is None:
         return []
     if isinstance(raw, str):
@@ -108,7 +108,7 @@ def parse_concept(rel_path: str, raw_text: str, bundle: str) -> ParsedConcept:
         description=meta.get("description"),
         resource=meta.get("resource"),
         timestamp=_coerce_timestamp(meta.get("timestamp")),
-        tags=_normalize_tags(meta.get("tags")),
+        tags=normalize_tags(meta.get("tags")),
         body=post.content,
         extra=extra,
     )
