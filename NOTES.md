@@ -1,6 +1,12 @@
 # NOTES — in-flight progress
 
-## Status: Phases A + B COMPLETE ✅ — 91 tests green
+## Status: Phases A + B + C COMPLETE ✅ — 102 tests green
+
+### Phase C (auth + webhook) — done
+- `app/security.py`: `require_api_key` on writes (POST/PUT/DELETE /concepts, POST /ingest).
+  Auth disabled when `API_KEY` unset (local dev); else `X-API-Key` header, constant-time compare.
+- `app/webhook.py`: `verify_signature` (HMAC-SHA256) + `RepoSyncer` (shallow clone + ingest).
+- `POST /webhooks/github`: verify `X-Hub-Signature-256`, ack 202, background re-ingest. Bad/missing sig -> 401.
 
 ### Phase B (OKF validator) — done
 - `app/bundle.py`: shared dir/zip reader (ingest + validate both use it).
@@ -25,10 +31,10 @@
 - Cosmetic warning: starlette TestClient nudges "install httpx2" — ignore.
 
 ### Next up
-- **Phase C** — API-key auth (`require_api_key` Depends on writes) + GitHub webhook
-  (`POST /webhooks/github`, HMAC-SHA256 verify, background re-ingest via IngestService).
-- Then D (semantic search — add `sentence-transformers`, hnsw index, hybrid rank),
-  E (web UI+graph), F (deploy: author Alembic migrations, provision Neon via MCP, Render).
+- **Phase D** — semantic/hybrid search: add `sentence-transformers` (all-MiniLM-L6-v2, 384d),
+  populate `embedding` on ingest, hnsw cosine index, `GET /search?mode=hybrid` (RRF of ts_rank + cosine).
+  NOTE: sentence-transformers pulls torch (~heavy install) — factor that in.
+- Then E (web UI+graph), F (deploy: author Alembic migrations, provision Neon via MCP, Render).
 
 ### Commands
 ```

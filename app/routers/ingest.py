@@ -7,11 +7,12 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from app.dependencies import get_ingest_service
 from app.ingest import IngestService
 from app.models import IngestResult
+from app.security import require_api_key
 
 router = APIRouter(tags=["ingest"])
 
 
-@router.post("/ingest", response_model=IngestResult)
+@router.post("/ingest", response_model=IngestResult, dependencies=[Depends(require_api_key)])
 async def ingest(
     path: str | None = Query(None, description="server-side directory of an OKF bundle"),
     bundle: str | None = Query(None),

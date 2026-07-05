@@ -17,6 +17,7 @@ from app.models import (
 )
 from app.render import render_markdown
 from app.repository import ConceptInput, SqlConceptRepository, SqlEdgeRepository
+from app.security import require_api_key
 from app.services import ConceptService
 
 router = APIRouter(prefix="/concepts", tags=["concepts"])
@@ -43,7 +44,12 @@ def _to_input(concept_id: str, bundle: str, payload: ConceptCreate | ConceptUpda
     )
 
 
-@router.post("", status_code=status.HTTP_201_CREATED, response_model=ConceptOut)
+@router.post(
+    "",
+    status_code=status.HTTP_201_CREATED,
+    response_model=ConceptOut,
+    dependencies=[Depends(require_api_key)],
+)
 def create_concept(
     payload: ConceptCreate,
     response: Response,
@@ -103,7 +109,11 @@ def get_concept(
     return _to_out(obj, render=render)
 
 
-@router.put("/{concept_id:path}", response_model=ConceptOut)
+@router.put(
+    "/{concept_id:path}",
+    response_model=ConceptOut,
+    dependencies=[Depends(require_api_key)],
+)
 def update_concept(
     concept_id: str,
     payload: ConceptUpdate,
@@ -116,7 +126,11 @@ def update_concept(
     return _to_out(obj)
 
 
-@router.delete("/{concept_id:path}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{concept_id:path}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_api_key)],
+)
 def delete_concept(
     concept_id: str,
     svc: ConceptService = Depends(get_concept_service),

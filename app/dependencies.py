@@ -12,6 +12,7 @@ from app.db import get_session
 from app.ingest import IngestService
 from app.repository import SqlConceptRepository, SqlEdgeRepository, SqlSearchRepository
 from app.services import ConceptService
+from app.webhook import RepoSyncer
 
 
 def get_concept_repo(session: Session = Depends(get_session)) -> SqlConceptRepository:
@@ -40,3 +41,7 @@ def get_ingest_service(
     edges: SqlEdgeRepository = Depends(get_edge_repo),
 ) -> IngestService:
     return IngestService(concepts, edges, session)
+
+
+def get_repo_syncer() -> RepoSyncer:
+    return RepoSyncer()
