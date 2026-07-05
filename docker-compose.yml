@@ -1,0 +1,21 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: okf_pg
+    environment:
+      POSTGRES_USER: okf
+      POSTGRES_PASSWORD: okf
+      POSTGRES_DB: okf
+    ports:
+      - "5433:5432"   # host 5433 — avoids a host-installed Postgres on 5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U okf -d okf"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
