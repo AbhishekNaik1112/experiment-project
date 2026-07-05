@@ -1,3 +1,5 @@
+name: knowledge-atlas
+
 services:
   db:
     image: pgvector/pgvector:pg16

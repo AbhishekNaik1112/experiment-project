@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "okf-knowledge-catalog"
+name = "knowledge-atlas"
 version = "0.1.0"
-description = "Knowledge Catalog API Service for OKF (Open Knowledge Format) bundles"
+description = "Knowledge Atlas — a Knowledge Catalog API for OKF (Open Knowledge Format) bundles"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115",

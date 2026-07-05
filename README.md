@@ -1,4 +1,6 @@
-# OKF Knowledge Catalog API
+# Knowledge Atlas
+
+*A Knowledge Catalog API for OKF (Open Knowledge Format) bundles — REST + web UI over a Markdown knowledge graph.*
 
 A backend service that ingests **OKF (Open Knowledge Format)** bundles — directories of Markdown files
 with YAML frontmatter — into PostgreSQL and exposes them through a REST API and a small web UI: CRUD,
