@@ -88,6 +88,21 @@ class LinksResponse(BaseModel):
     backlinks: list[LinkOut]
 
 
+class ValidationIssueOut(BaseModel):
+    path: str
+    concept_id: str | None
+    rule: str
+    severity: str
+    message: str
+
+
+class ValidationReport(BaseModel):
+    bundle: str
+    valid: bool
+    concept_count: int
+    issues: list[ValidationIssueOut]
+
+
 class IngestError(BaseModel):
     path: str
     reason: str

@@ -1,6 +1,13 @@
 # NOTES — in-flight progress
 
-## Status: Phase A (core MVP) COMPLETE ✅ — 82 tests green, drive-verified
+## Status: Phases A + B COMPLETE ✅ — 91 tests green
+
+### Phase B (OKF validator) — done
+- `app/bundle.py`: shared dir/zip reader (ingest + validate both use it).
+- `app/rules.py`: `validate_bundle` — missing_type (error), duplicate_id (error), dangling_link (warning).
+- `POST /validate` (path or zip), no persistence; returns report (valid flag + issues + concept_count).
+
+## Phase A (core MVP) COMPLETE ✅ — drive-verified
 
 ### Done (M0–M10)
 - M0 harness: docker-compose pg+pgvector (host **port 5433** — host has its own PG on 5432),
@@ -18,9 +25,9 @@
 - Cosmetic warning: starlette TestClient nudges "install httpx2" — ignore.
 
 ### Next up
-- **Phase B** — OKF validator: `rules.py` + `POST /validate` (type-required, dup-id, dangling links),
-  returns report without persisting.
-- Then C (auth+webhook), D (semantic search — add `sentence-transformers`, hnsw index, hybrid rank),
+- **Phase C** — API-key auth (`require_api_key` Depends on writes) + GitHub webhook
+  (`POST /webhooks/github`, HMAC-SHA256 verify, background re-ingest via IngestService).
+- Then D (semantic search — add `sentence-transformers`, hnsw index, hybrid rank),
   E (web UI+graph), F (deploy: author Alembic migrations, provision Neon via MCP, Render).
 
 ### Commands
