@@ -6,7 +6,13 @@ from fastapi import APIRouter, Depends, Query, Response, status
 
 from app.dependencies import get_concept_service
 from app.errors import NotFoundError
-from app.models import ConceptCreate, ConceptOut, ConceptUpdate
+from app.models import (
+    ConceptCreate,
+    ConceptListItem,
+    ConceptOut,
+    ConceptUpdate,
+    Page,
+)
 from app.render import render_markdown
 from app.repository import ConceptInput
 from app.services import ConceptService
@@ -44,6 +50,23 @@ def create_concept(
     obj = svc.create(_to_input(payload.id, payload.bundle, payload))
     response.headers["Location"] = f"/concepts/{obj.id}"
     return _to_out(obj)
+
+
+@router.get("", response_model=Page[ConceptListItem])
+def list_concepts(
+    type: str | None = Query(None),
+    tags: list[str] = Query(default=[]),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    svc: ConceptService = Depends(get_concept_service),
+) -> Page[ConceptListItem]:
+    items, total = svc.list(type=type, tags=tags or None, limit=limit, offset=offset)
+    return Page(
+        items=[ConceptListItem.model_validate(o) for o in items],
+        total=total,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @router.get("/{concept_id:path}", response_model=ConceptOut)
