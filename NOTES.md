@@ -1,6 +1,14 @@
 # NOTES — in-flight progress
 
-## Status: Phases A + B + C COMPLETE ✅ — 102 tests green
+## Status: Phases A + B + C + D COMPLETE ✅ — 108 tests green (+2 opt-in real-model, skipped)
+
+### Phase D (semantic / hybrid search) — done
+- `app/embeddings.py`: `SentenceTransformerEmbedder` (all-MiniLM-L6-v2, 384d) — **lazy** torch import.
+- `embedding vector(384)` col + hnsw cosine index; populated on ingest when `EMBEDDINGS_ENABLED=true`.
+- Search `?mode=keyword|semantic|hybrid`; hybrid = RRF of ts_rank + cosine. Disabled -> 400; bad mode -> 422.
+- Plumbing tested with a deterministic FakeEmbedder (no torch). Real model verified via
+  `OKF_REAL_EMBED=1 pytest tests/unit/test_embeddings_real.py`.
+- Optional install: `pip install -e ".[semantic]"`.
 
 ### Phase C (auth + webhook) — done
 - `app/security.py`: `require_api_key` on writes (POST/PUT/DELETE /concepts, POST /ingest).
@@ -31,10 +39,9 @@
 - Cosmetic warning: starlette TestClient nudges "install httpx2" — ignore.
 
 ### Next up
-- **Phase D** — semantic/hybrid search: add `sentence-transformers` (all-MiniLM-L6-v2, 384d),
-  populate `embedding` on ingest, hnsw cosine index, `GET /search?mode=hybrid` (RRF of ts_rank + cosine).
-  NOTE: sentence-transformers pulls torch (~heavy install) — factor that in.
-- Then E (web UI+graph), F (deploy: author Alembic migrations, provision Neon via MCP, Render).
+- **Phase E** — web UI: Jinja + htmx pages (browse/list, concept view via markdown-it render, search box)
+  + Cytoscape.js graph consuming a `/graph` JSON endpoint (nodes=concepts, edges=links).
+- Then F (deploy: author Alembic migrations, provision Neon via MCP, Render free web service).
 
 ### Commands
 ```

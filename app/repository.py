@@ -111,6 +111,12 @@ class SqlConceptRepository:
         items = list(self.s.execute(list_stmt).scalars())
         return items, total
 
+    def set_embedding(self, concept_id: str, vector: list[float]) -> None:
+        obj = self.s.get(Concept, concept_id)
+        if obj is not None:
+            obj.embedding = vector
+            self.s.flush()
+
     @staticmethod
     def _apply(obj: Concept, d: ConceptInput) -> None:
         obj.type = d.type
@@ -184,6 +190,15 @@ class SqlSearchRepository:
     def __init__(self, session: Session) -> None:
         self.s = session
 
+    @staticmethod
+    def _extra_filters(type: str | None, tags: list[str] | None) -> list:
+        conditions = []
+        if type:
+            conditions.append(Concept.type == type)
+        if tags:
+            conditions.append(Concept.tags.contains(tags))
+        return conditions
+
     def search(
         self,
         q: str,
@@ -197,11 +212,7 @@ class SqlSearchRepository:
         score = func.ts_rank_cd(Concept.search_vector, tsquery)
         snippet = func.ts_headline("english", Concept.body, tsquery, _HEADLINE_OPTS)
 
-        conditions = [Concept.search_vector.bool_op("@@")(tsquery)]
-        if type:
-            conditions.append(Concept.type == type)
-        if tags:
-            conditions.append(Concept.tags.contains(tags))
+        conditions = [Concept.search_vector.bool_op("@@")(tsquery), *self._extra_filters(type, tags)]
         where = and_(*conditions)
 
         total = self.s.execute(
@@ -233,5 +244,107 @@ class SqlSearchRepository:
                 snippet=r.snippet,
             )
             for r in rows
+        ]
+        return hits, total
+
+    def semantic(
+        self,
+        query_vec: list[float],
+        *,
+        type: str | None = None,
+        tags: list[str] | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> tuple[list[SearchHit], int]:
+        where = and_(Concept.embedding.isnot(None), *self._extra_filters(type, tags))
+        distance = Concept.embedding.cosine_distance(query_vec)
+        total = self.s.execute(
+            select(func.count()).select_from(Concept).where(where)
+        ).scalar_one()
+        rows = self.s.execute(
+            select(
+                Concept.id,
+                Concept.type,
+                Concept.title,
+                Concept.description,
+                distance.label("distance"),
+            )
+            .where(where)
+            .order_by(distance)
+            .limit(limit)
+            .offset(offset)
+        ).all()
+        hits = [
+            SearchHit(
+                id=r.id,
+                type=r.type,
+                title=r.title,
+                description=r.description,
+                score=1.0 - float(r.distance),  # cosine similarity
+                snippet=None,
+            )
+            for r in rows
+        ]
+        return hits, total
+
+    def hybrid(
+        self,
+        q: str,
+        query_vec: list[float],
+        *,
+        type: str | None = None,
+        tags: list[str] | None = None,
+        limit: int = 50,
+        offset: int = 0,
+        k: int = 60,
+        pool: int = 100,
+    ) -> tuple[list[SearchHit], int]:
+        """Reciprocal-rank fusion of keyword (ts_rank_cd) and semantic (cosine) rankings."""
+        extra = self._extra_filters(type, tags)
+        tsquery = func.websearch_to_tsquery("english", q)
+
+        keyword_ids = [
+            row[0]
+            for row in self.s.execute(
+                select(Concept.id)
+                .where(and_(Concept.search_vector.bool_op("@@")(tsquery), *extra))
+                .order_by(func.ts_rank_cd(Concept.search_vector, tsquery).desc())
+                .limit(pool)
+            )
+        ]
+        semantic_ids = [
+            row[0]
+            for row in self.s.execute(
+                select(Concept.id)
+                .where(and_(Concept.embedding.isnot(None), *extra))
+                .order_by(Concept.embedding.cosine_distance(query_vec))
+                .limit(pool)
+            )
+        ]
+
+        scores: dict[str, float] = {}
+        for rank, cid in enumerate(keyword_ids):
+            scores[cid] = scores.get(cid, 0.0) + 1.0 / (k + rank + 1)
+        for rank, cid in enumerate(semantic_ids):
+            scores[cid] = scores.get(cid, 0.0) + 1.0 / (k + rank + 1)
+
+        ordered = sorted(scores, key=lambda cid: scores[cid], reverse=True)
+        total = len(ordered)
+        page = ordered[offset : offset + limit]
+        rows = {
+            c.id: c
+            for c in self.s.execute(select(Concept).where(Concept.id.in_(page))).scalars()
+        }
+        hits = [
+            SearchHit(
+                id=cid,
+                type=rows[cid].type,
+                title=rows[cid].title,
+                description=rows[cid].description,
+                score=scores[cid],
+                snippet=None,
+            )
+            for cid in page
+            if cid in rows
         ]
         return hits, total

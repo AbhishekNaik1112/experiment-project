@@ -10,6 +10,7 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from app.bundle import BundleEntry, read_dir, read_zip
+from app.embeddings import Embedder
 from app.links import resolved_links
 from app.models import IngestError, IngestResult
 from app.parser import MissingTypeError, is_structural_file, parse_concept
@@ -27,10 +28,12 @@ class IngestService:
         concepts: SqlConceptRepository,
         edges: SqlEdgeRepository,
         session: Session,
+        embedder: Embedder | None = None,
     ) -> None:
         self.concepts = concepts
         self.edges = edges
         self.session = session
+        self.embedder = embedder
 
     def ingest_dir(self, dir_path: str, bundle: str | None = None) -> IngestResult:
         # NOTE: reads an arbitrary server-side path (local/self-host tool). Guard behind auth
@@ -45,6 +48,7 @@ class IngestService:
         created = updated = skipped = 0
         errors: list[IngestError] = []
         bodies: dict[str, str] = {}
+        embed_sources: dict[str, str] = {}
 
         for entry in entries:
             if is_structural_file(entry.rel_path):
@@ -60,6 +64,9 @@ class IngestService:
             updated += existed
             created += not existed
             bodies[parsed.id] = parsed.body
+            embed_sources[parsed.id] = " ".join(
+                x for x in (parsed.title, parsed.description, parsed.body) if x
+            )
 
         for concept_id, body in bodies.items():
             edges = [
@@ -71,6 +78,12 @@ class IngestService:
                 for target, anchor in resolved_links(concept_id, body)
             ]
             self.edges.replace_for_source(concept_id, edges)
+
+        if self.embedder is not None and embed_sources:
+            ids = list(embed_sources)
+            vectors = self.embedder.encode([embed_sources[i] for i in ids])
+            for concept_id, vector in zip(ids, vectors):
+                self.concepts.set_embedding(concept_id, list(vector))
 
         self.session.commit()
         return IngestResult(

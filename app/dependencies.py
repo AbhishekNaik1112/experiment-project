@@ -8,7 +8,9 @@ from __future__ import annotations
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
+from app.config import Settings, get_settings
 from app.db import get_session
+from app.embeddings import Embedder, get_embedder
 from app.ingest import IngestService
 from app.repository import SqlConceptRepository, SqlEdgeRepository, SqlSearchRepository
 from app.services import ConceptService
@@ -39,8 +41,12 @@ def get_ingest_service(
     session: Session = Depends(get_session),
     concepts: SqlConceptRepository = Depends(get_concept_repo),
     edges: SqlEdgeRepository = Depends(get_edge_repo),
+    settings: Settings = Depends(get_settings),
+    embedder: Embedder = Depends(get_embedder),
 ) -> IngestService:
-    return IngestService(concepts, edges, session)
+    return IngestService(
+        concepts, edges, session, embedder=embedder if settings.embeddings_enabled else None
+    )
 
 
 def get_repo_syncer() -> RepoSyncer:

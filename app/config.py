@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     api_key: str | None = None
     github_webhook_secret: str | None = None
 
+    embeddings_enabled: bool = False
+    embedding_model: str = "all-MiniLM-L6-v2"
+
     default_page_size: int = 50
     max_page_size: int = 200
 

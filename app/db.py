@@ -68,6 +68,12 @@ class Concept(Base):
         Index("idx_concepts_bundle", "bundle"),
         Index("idx_concepts_tags", "tags", postgresql_using="gin"),
         Index("idx_concepts_fts", "search_vector", postgresql_using="gin"),
+        Index(
+            "idx_concepts_embed",
+            "embedding",
+            postgresql_using="hnsw",
+            postgresql_ops={"embedding": "vector_cosine_ops"},
+        ),
     )
 
 

@@ -31,7 +31,9 @@ dev = [
     "black>=24",
     "mypy>=1.11",
 ]
-# sentence-transformers is deferred to Phase D (pulls in torch); keep the base install light.
+# Semantic search (Phase D). Heavy (pulls torch) so kept optional and lazily imported.
+# Install with:  pip install -e ".[semantic]"   and set EMBEDDINGS_ENABLED=true
+semantic = ["sentence-transformers>=3"]
 
 [tool.setuptools]
 packages = ["app"]
