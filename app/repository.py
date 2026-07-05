@@ -7,10 +7,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
-from app.db import Concept
+from app.db import Concept, Edge
 from app.errors import ConflictError, NotFoundError
 from app.parser import ParsedConcept
 
@@ -122,3 +122,44 @@ class SqlConceptRepository:
         obj.tags = list(d.tags)
         obj.body = d.body
         obj.frontmatter = dict(d.frontmatter)
+
+
+@dataclass
+class EdgeInput:
+    target_id: str
+    anchor_text: str | None = None
+    rel_type: str = "link"
+    resolved: bool = True
+
+
+class SqlEdgeRepository:
+    def __init__(self, session: Session) -> None:
+        self.s = session
+
+    def replace_for_source(self, source_id: str, edges: list[EdgeInput]) -> None:
+        """Replace all edges originating from source_id (idempotent full rewrite)."""
+        self.s.execute(delete(Edge).where(Edge.source_id == source_id))
+        seen: set[tuple[str, str]] = set()
+        for e in edges:
+            key = (e.target_id, e.rel_type)
+            if key in seen:
+                continue
+            seen.add(key)
+            self.s.add(
+                Edge(
+                    source_id=source_id,
+                    target_id=e.target_id,
+                    rel_type=e.rel_type,
+                    anchor_text=e.anchor_text,
+                    resolved=e.resolved,
+                )
+            )
+        self.s.flush()
+
+    def outgoing(self, source_id: str) -> list[Edge]:
+        stmt = select(Edge).where(Edge.source_id == source_id).order_by(Edge.target_id)
+        return list(self.s.execute(stmt).scalars())
+
+    def backlinks(self, target_id: str) -> list[Edge]:
+        stmt = select(Edge).where(Edge.target_id == target_id).order_by(Edge.source_id)
+        return list(self.s.execute(stmt).scalars())
