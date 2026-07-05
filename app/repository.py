@@ -53,6 +53,9 @@ class SqlConceptRepository:
     def get(self, concept_id: str) -> Concept | None:
         return self.s.get(Concept, concept_id)
 
+    def all(self) -> list[Concept]:
+        return list(self.s.execute(select(Concept).order_by(Concept.id)).scalars())
+
     def upsert(self, data: ConceptInput) -> Concept:
         obj = self.s.get(Concept, data.id)
         if obj is None:
@@ -169,6 +172,9 @@ class SqlEdgeRepository:
     def backlinks(self, target_id: str) -> list[Edge]:
         stmt = select(Edge).where(Edge.target_id == target_id).order_by(Edge.source_id)
         return list(self.s.execute(stmt).scalars())
+
+    def all(self) -> list[Edge]:
+        return list(self.s.execute(select(Edge)).scalars())
 
 
 @dataclass

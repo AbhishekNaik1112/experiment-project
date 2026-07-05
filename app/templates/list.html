@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Concepts</h1>
+<input type="search" name="q" placeholder="Search concepts…"
+       hx-get="/ui/search" hx-trigger="input changed delay:300ms, search" hx-target="#results">
+<div id="results">{% include "concept_rows.html" %}</div>
+{% endblock %}

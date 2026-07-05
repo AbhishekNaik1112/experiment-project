@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Graph{% endblock %}
+{% block content %}
+<h1>Concept graph</h1>
+<p><small>Nodes = concepts, arrows = cross-links.</small></p>
+<div id="cy" style="width:100%; height:600px; border:1px solid #ccc;"></div>
+<script src="https://unpkg.com/cytoscape@3.30.2/dist/cytoscape.min.js"></script>
+<script>
+  fetch('/graph').then(r => r.json()).then(g => {
+    const elements = [];
+    g.nodes.forEach(n => elements.push({ data: { id: n.id, label: n.title || n.id } }));
+    g.edges.forEach(e => elements.push({ data: { source: e.source, target: e.target } }));
+    cytoscape({
+      container: document.getElementById('cy'),
+      elements: elements,
+      style: [
+        { selector: 'node', style: { 'label': 'data(label)', 'font-size': 8, 'background-color': '#5b8def' } },
+        { selector: 'edge', style: { 'width': 1, 'line-color': '#bbb', 'target-arrow-shape': 'triangle', 'target-arrow-color': '#bbb', 'curve-style': 'bezier' } }
+      ],
+      layout: { name: 'cose' }
+    });
+  });
+</script>
+{% endblock %}

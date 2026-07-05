@@ -103,6 +103,23 @@ class ValidationReport(BaseModel):
     issues: list[ValidationIssueOut]
 
 
+class GraphNode(BaseModel):
+    id: str
+    type: str
+    title: str | None
+
+
+class GraphEdge(BaseModel):
+    source: str
+    target: str
+    resolved: bool
+
+
+class GraphResponse(BaseModel):
+    nodes: list[GraphNode]
+    edges: list[GraphEdge]
+
+
 class IngestError(BaseModel):
     path: str
     reason: str

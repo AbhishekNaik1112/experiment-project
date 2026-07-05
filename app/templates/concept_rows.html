@@ -1,0 +1,7 @@
+<ul>
+{% for c in concepts %}
+  <li><a href="/ui/concepts/{{ c.id }}">{{ c.title or c.id }}</a> <small>[{{ c.type }}]</small></li>
+{% else %}
+  <li><em>No concepts.</em></li>
+{% endfor %}
+</ul>

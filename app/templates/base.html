@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}OKF Catalog{% endblock %}</title>
+  <script src="https://unpkg.com/htmx.org@2.0.3"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; color: #222; }
+    header a { margin-right: 1rem; text-decoration: none; }
+    h1 { margin-bottom: .25rem; }
+    .tag { background: #eef; border-radius: 4px; padding: 0 .4rem; font-size: .85em; }
+    input[type=search] { width: 100%; padding: .5rem; font-size: 1rem; margin: 1rem 0; box-sizing: border-box; }
+    article { border-top: 1px solid #ddd; margin-top: 1rem; padding-top: 1rem; }
+    small { color: #666; }
+    pre { background: #f6f6f6; padding: .5rem; overflow: auto; }
+    table { border-collapse: collapse; }
+    td, th { border: 1px solid #ddd; padding: .25rem .5rem; }
+  </style>
+</head>
+<body>
+  <header><a href="/ui">Catalog</a><a href="/ui/graph">Graph</a><a href="/docs">API</a></header>
+  <main>{% block content %}{% endblock %}</main>
+</body>
+</html>

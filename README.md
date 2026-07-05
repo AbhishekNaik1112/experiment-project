@@ -53,8 +53,19 @@ ingests a trimmed real `crypto_bitcoin` bundle as an end-to-end fixture.
 | `GET` | `/concepts/{id}/links` | Outgoing links + backlinks |
 | `GET` | `/search?q=&type=&tags=` | Full-text search (ts_rank_cd ordered) |
 
+Also: `POST /validate` (lint a bundle, no persist), `POST /webhooks/github` (HMAC-verified auto-ingest),
+`GET /graph` (nodes + edges JSON). Search supports `?mode=keyword|semantic|hybrid` (semantic needs the
+`[semantic]` extra + `EMBEDDINGS_ENABLED=true`).
+
 Concept IDs are the file path within the bundle minus `.md` (e.g. `tables/users`), so routes use a
 path converter — slashes in IDs work.
+
+## Web UI
+
+A server-rendered UI (Jinja + htmx) lives under `/ui`:
+- `/ui` — browse concepts with a live search box
+- `/ui/concepts/{id}` — rendered Markdown + outgoing links / backlinks
+- `/ui/graph` — interactive Cytoscape.js graph of the cross-links
 
 ## Roadmap
 Phase A (core MVP) ✅ · B: OKF validator · C: API-key auth + GitHub webhook · D: semantic/hybrid

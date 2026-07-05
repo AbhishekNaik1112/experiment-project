@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ c.title or c.id }}{% endblock %}
+{% block content %}
+<p><a href="/ui">&larr; back</a></p>
+<h1>{{ c.title or c.id }}</h1>
+<p><small>{{ c.type }} &middot; {{ c.id }}{% if c.bundle %} &middot; bundle: {{ c.bundle }}{% endif %}</small></p>
+{% if c.tags %}<p>{% for t in c.tags %}<span class="tag">{{ t }}</span> {% endfor %}</p>{% endif %}
+<article>{{ html|safe }}</article>
+<h2>Outgoing links</h2>
+<ul>
+{% for l in outgoing %}
+  <li>{% if l.resolved %}<a href="/ui/concepts/{{ l.target_id }}">{{ l.target_id }}</a>{% else %}{{ l.target_id }} <small>(missing)</small>{% endif %}</li>
+{% else %}<li><em>none</em></li>{% endfor %}
+</ul>
+<h2>Backlinks</h2>
+<ul>
+{% for l in backlinks %}
+  <li><a href="/ui/concepts/{{ l.source_id }}">{{ l.source_id }}</a></li>
+{% else %}<li><em>none</em></li>{% endfor %}
+</ul>
+{% endblock %}

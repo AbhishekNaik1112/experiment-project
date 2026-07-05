@@ -1,6 +1,12 @@
 # NOTES — in-flight progress
 
-## Status: Phases A + B + C + D COMPLETE ✅ — 108 tests green (+2 opt-in real-model, skipped)
+## Status: Phases A–E COMPLETE ✅ — 116 tests green (+2 opt-in real-model, skipped)
+
+### Phase E (web UI + graph) — done
+- `GET /graph` JSON (nodes=concepts, edges=resolved links only); dangling edges dropped.
+- Jinja + htmx UI: `/ui` (browse + live search box), `/ui/concepts/{id}` (rendered MD + links/backlinks),
+  `/ui/graph` (Cytoscape.js via CDN reading `/graph`). Templates in `app/templates/`.
+- Drive-verified: /graph 3 nodes/4 edges on crypto_bitcoin, slash-id concept page renders.
 
 ### Phase D (semantic / hybrid search) — done
 - `app/embeddings.py`: `SentenceTransformerEmbedder` (all-MiniLM-L6-v2, 384d) — **lazy** torch import.
@@ -38,10 +44,14 @@
   (planned; needed for Neon deploy in Phase F).
 - Cosmetic warning: starlette TestClient nudges "install httpx2" — ignore.
 
-### Next up
-- **Phase E** — web UI: Jinja + htmx pages (browse/list, concept view via markdown-it render, search box)
-  + Cytoscape.js graph consuming a `/graph` JSON endpoint (nodes=concepts, edges=links).
-- Then F (deploy: author Alembic migrations, provision Neon via MCP, Render free web service).
+### Next up — Phase F (deploy, free)
+- Author **Alembic** migrations (baseline from current models incl. hnsw + generated tsvector column —
+  autogenerate may need manual tweaks for the Computed tsvector + hnsw index ops).
+- `Dockerfile` (COPY app/ so templates ship). Provision **Neon** project/branch via Neon MCP, enable
+  `vector`, run migrations. **Render** free web service, env `DATABASE_URL`→Neon, `API_KEY`,
+  `GITHUB_WEBHOOK_SECRET`, `EMBEDDINGS_ENABLED`. Point GitHub webhook at Render URL. Smoke test.
+- NOTE: torch on Render free (512MB RAM) may be too heavy — consider EMBEDDINGS_ENABLED=false in cloud,
+  or a smaller/remote embedding path. Keyword+validator+UI work fine without it.
 
 ### Commands
 ```
