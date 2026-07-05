@@ -4,17 +4,19 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Query, Response, status
 
-from app.dependencies import get_concept_service
+from app.dependencies import get_concept_repo, get_concept_service, get_edge_repo
 from app.errors import NotFoundError
 from app.models import (
     ConceptCreate,
     ConceptListItem,
     ConceptOut,
     ConceptUpdate,
+    LinkOut,
+    LinksResponse,
     Page,
 )
 from app.render import render_markdown
-from app.repository import ConceptInput
+from app.repository import ConceptInput, SqlConceptRepository, SqlEdgeRepository
 from app.services import ConceptService
 
 router = APIRouter(prefix="/concepts", tags=["concepts"])
@@ -67,6 +69,26 @@ def list_concepts(
         limit=limit,
         offset=offset,
     )
+
+
+# Declared before GET /{concept_id:path} so `.../links` is not swallowed by the path converter.
+@router.get("/{concept_id:path}/links", response_model=LinksResponse)
+def get_links(
+    concept_id: str,
+    concepts_repo: SqlConceptRepository = Depends(get_concept_repo),
+    edges_repo: SqlEdgeRepository = Depends(get_edge_repo),
+) -> LinksResponse:
+    if concepts_repo.get(concept_id) is None:
+        raise NotFoundError(f"concept {concept_id!r} not found")
+    outgoing = [
+        LinkOut(target_id=e.target_id, anchor_text=e.anchor_text, resolved=e.resolved)
+        for e in edges_repo.outgoing(concept_id)
+    ]
+    backlinks = [
+        LinkOut(target_id=e.source_id, anchor_text=e.anchor_text, resolved=e.resolved)
+        for e in edges_repo.backlinks(concept_id)
+    ]
+    return LinksResponse(id=concept_id, outgoing=outgoing, backlinks=backlinks)
 
 
 @router.get("/{concept_id:path}", response_model=ConceptOut)
