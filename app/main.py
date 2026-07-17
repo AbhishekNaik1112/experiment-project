@@ -2,15 +2,28 @@
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
+from app.config import get_settings
 from app.errors import ConflictError, NotFoundError
 from app.routers import concepts, graph, ingest, search, ui, validate, webhooks
 
 
+@asynccontextmanager
+async def _lifespan(app: FastAPI):
+    # Cloud has no manual migration step; create the schema on boot (idempotent) when asked.
+    if get_settings().auto_init_db:
+        from app.db import init_db, make_engine
+
+        init_db(make_engine())
+    yield
+
+
 def create_app() -> FastAPI:
-    app = FastAPI(title="OKF Knowledge Catalog API", version="0.1.0")
+    app = FastAPI(title="OKF Knowledge Catalog API", version="0.1.0", lifespan=_lifespan)
 
     @app.get("/health", tags=["meta"])
     def health() -> dict[str, str]:

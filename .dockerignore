@@ -1,0 +1,17 @@
+.venv
+__pycache__
+*.pyc
+*.egg-info
+.git
+.gitignore
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage
+htmlcov
+tests
+initdb
+docker-compose.yml
+.env
+.env.example
+NOTES.md

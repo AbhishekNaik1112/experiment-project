@@ -38,6 +38,9 @@ semantic = ["sentence-transformers>=3"]
 [tool.setuptools]
 packages = ["app"]
 
+[tool.setuptools.package-data]
+app = ["templates/*.html"]   # ship Jinja templates in the built wheel / Docker image
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"

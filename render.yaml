@@ -1,0 +1,20 @@
+# Render Blueprint — free web service (Docker) for knowledge-atlas.
+# Pair with a free Neon Postgres; set DATABASE_URL + GITHUB_WEBHOOK_SECRET in the dashboard.
+services:
+  - type: web
+    name: knowledge-atlas
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        sync: false                 # paste the Neon connection string in the dashboard
+      - key: API_KEY
+        generateValue: true         # Render generates a secret; copy it for write calls
+      - key: GITHUB_WEBHOOK_SECRET
+        sync: false                 # set to match the GitHub webhook secret
+      - key: EMBEDDINGS_ENABLED
+        value: "false"              # semantic search off in cloud (torch too heavy for free RAM)
+      - key: AUTO_INIT_DB
+        value: "true"               # create the schema on first boot
