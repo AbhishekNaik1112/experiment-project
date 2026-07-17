@@ -1,6 +1,18 @@
 # NOTES — in-flight progress
 
-## Status: Phases A–E COMPLETE ✅ — 116 tests green (+2 opt-in real-model, skipped)
+## Status: Phases A–E done + Phase F artifacts ready ✅ — 119 tests green (+2 opt-in real-model)
+
+### Phase F (deploy) — artifacts done; Render step is user-interactive
+- **Neon** project `wild-salad-94185066` (db `neondb`) provisioned; schema/pgvector/hnsw verified + seeded
+  with crypto_bitcoin (3 concepts). Connection string is a secret (not in repo).
+- **Dockerfile** (slim, no torch) + **.dockerignore** + **render.yaml** Blueprint pushed.
+- `config.py` normalizes bare `postgresql://`→`postgresql+psycopg://`; `main.py` lifespan runs `init_db`
+  on boot when `AUTO_INIT_DB=true`. Templates shipped via package-data.
+- **Docker image built + run against Neon, verified**: ingest(zip)=3, search ranked, /ui 200.
+- LEFT (user, dashboard): Render → New → Blueprint → connect `knowledge-atlas` repo → set `DATABASE_URL`
+  (Neon) + `GITHUB_WEBHOOK_SECRET` → deploy. Then optionally wire the GitHub push webhook.
+- Note: `.venv` editable pointer went stale after the folder rename — run from the project root (cwd on
+  path) or `pip install -e .` to refresh; tests/uvicorn work from the root regardless.
 
 ### Phase E (web UI + graph) — done
 - `GET /graph` JSON (nodes=concepts, edges=resolved links only); dangling edges dropped.
