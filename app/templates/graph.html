@@ -10,7 +10,7 @@
     const elements = [];
     g.nodes.forEach(n => elements.push({ data: { id: n.id, label: n.title || n.id } }));
     g.edges.forEach(e => elements.push({ data: { source: e.source, target: e.target } }));
-    cytoscape({
+    const cy = cytoscape({
       container: document.getElementById('cy'),
       elements: elements,
       style: [
@@ -18,6 +18,9 @@
         { selector: 'edge', style: { 'width': 1, 'line-color': '#bbb', 'target-arrow-shape': 'triangle', 'target-arrow-color': '#bbb', 'curve-style': 'bezier' } }
       ],
       layout: { name: 'cose' }
+    });
+    cy.on('tap', 'node', function (evt) {
+      window.location = '/ui/concepts/' + evt.target.id();
     });
   });
 </script>

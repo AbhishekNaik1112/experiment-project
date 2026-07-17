@@ -10,7 +10,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.dependencies import get_concept_repo, get_edge_repo, get_search_repo
 from app.errors import NotFoundError
-from app.render import render_markdown
+from app.render import render_body_html
 from app.repository import SqlConceptRepository, SqlEdgeRepository, SqlSearchRepository
 
 templates = Jinja2Templates(directory=str(Path(__file__).resolve().parent.parent / "templates"))
@@ -62,7 +62,7 @@ def ui_concept(
         name="concept.html",
         context={
             "c": obj,
-            "html": render_markdown(obj.body),
+            "html": render_body_html(obj.body, concept_id),
             "outgoing": edges.outgoing(concept_id),
             "backlinks": edges.backlinks(concept_id),
         },

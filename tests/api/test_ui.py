@@ -46,3 +46,20 @@ def test_root_redirects_to_ui(client):
     r = client.get("/", follow_redirects=False)
     assert r.status_code in (302, 307)
     assert r.headers["location"] == "/ui"
+
+
+def test_ui_body_links_rewritten_to_ui_routes(client):
+    client.post("/concepts", json={"id": "tables/blocks", "type": "Doc"})
+    client.post(
+        "/concepts",
+        json={"id": "datasets/x", "type": "Doc", "body": "see [blocks](../tables/blocks.md)"},
+    )
+    r = client.get("/ui/concepts/datasets/x")
+    assert "/ui/concepts/tables/blocks" in r.text
+    assert "../tables/blocks.md" not in r.text  # raw .md link rewritten
+
+
+def test_ui_body_external_links_preserved(client):
+    client.post("/concepts", json={"id": "a", "type": "Doc", "body": "[docs](https://example.com)"})
+    r = client.get("/ui/concepts/a")
+    assert "https://example.com" in r.text
