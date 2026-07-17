@@ -40,3 +40,9 @@ def test_ui_missing_concept_404(client):
 def test_ui_graph_page_loads_cytoscape(client):
     r = client.get("/ui/graph")
     assert r.status_code == 200 and "cytoscape" in r.text.lower()
+
+
+def test_root_redirects_to_ui(client):
+    r = client.get("/", follow_redirects=False)
+    assert r.status_code in (302, 307)
+    assert r.headers["location"] == "/ui"

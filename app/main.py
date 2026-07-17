@@ -5,7 +5,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from app.config import get_settings
 from app.errors import ConflictError, NotFoundError
@@ -24,6 +24,10 @@ async def _lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(title="OKF Knowledge Catalog API", version="0.1.0", lifespan=_lifespan)
+
+    @app.get("/", include_in_schema=False)
+    def root() -> RedirectResponse:
+        return RedirectResponse(url="/ui")
 
     @app.get("/health", tags=["meta"])
     def health() -> dict[str, str]:
